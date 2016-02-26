@@ -133,6 +133,13 @@ class ApiLogin(ApiRequest):
             if "@" in nickname: nickname = nickname.split("@",2)[0]
             self.respond( { 'state':'new_user', 'suggested_name':nickname } )
 
+class ApiLoginAbort(ApiRequest):
+    allowJSONP = None
+
+    def get(self):
+        if not self.authorize(): return
+        self.respond( { 'logout_url':users.create_logout_url("/#/action/loggedout") } )
+
 class ApiUsers(ApiRequest):
     def get(self):
         if not self.authorize(): return
@@ -192,6 +199,7 @@ class ApiUserFolders(ApiRequest):
         if not self.validate(user): return
         gaeUser = users.get_current_user()
         db_user = User.get( db.Key.from_path("User",user) )
+
         folders = []
         for k in Folder.all().ancestor(db.Key.from_path("User",user)):
         	if k.isPublic != None and not k.isPublic and gaeUser != db_user.gaeUser: continue
@@ -345,6 +353,7 @@ app = web.WSGIApplication(
         (r'/api/user/', ApiUsers),
 
         (r'/api/login', ApiLogin),
+        (r'/api/abort', ApiLoginAbort),
 
         (r'/api/admin/upgrade', ApiAdminUpgrade),
     ],
