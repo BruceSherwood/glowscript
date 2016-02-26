@@ -185,39 +185,51 @@ img.right
 
 .folderPage .programs .program
 {
-	overflow: hidden;
-	margin: 10px;
-	font-size: 80%;
-}
-
-.folderPage .programs .program .prog-run
-{
-	margin-left: 20px;
+    overflow: hidden;
+    margin: 10px;
+    font-size: 80%;
 }
 
 .folderPage .programs .program .prog-screenshot
 {
-	float:left; 
-	margin-right:20px; 
-	width:128px;
-	height:90px;
-}
-
-.prog-description
-{
-	float: left;
-	margin-left: 20px;
-	font-size: 80%;
+    float:left; 
+    margin-right:20px; 
+    width:128px;
+    height:90px;
 }
 
 .folderPage .programs .program .prog-header
 {
-	margin-bottom: 5px;
+    margin-bottom: 5px;
+    margin-left:165px;
+}
+
+.programname, .prog-name
+{
+    font-size: 120%;
 }
 
 .prog-name, .programname, .folder-name
 {
-	font-weight: bold;
+    font-weight: bold;
+}
+
+.prog-name, .prog-buttons
+{
+    margin-bottom: 5px;
+}
+
+.prog-buttons
+{
+    margin-left: 20px;
+}
+
+.prog-description
+{
+    margin-left: 20px;
+    margin-bottom: 4px;
+    font-size: 80%;
+    font-weight: bold;
 }
 
 .help-highlight
@@ -228,8 +240,14 @@ img.right
 
 a.button
 {
-	margin-left: 50px;
+	margin-right: 25px;
 	color: Blue;
+}
+
+a.disabled
+{
+	pointer-events: none;
+	color: #888888;
 }
 
 .template
