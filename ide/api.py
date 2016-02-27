@@ -51,7 +51,7 @@ class User (db.Model):
     joinDate = db.DateTimeProperty(auto_now_add=True)
     gaeUser = db.UserProperty()
     secret = db.StringProperty(indexed=False)
-    pinned = db.StringListProperty(indexed=False, default=["GlowScriptDemos/Examples"])
+    pinned = db.StringListProperty(indexed=False) #, default=["GlowScriptDemos/Examples"])
 
 class Folder (db.Model):
     """A collection of programs created by a user"""
@@ -176,6 +176,7 @@ class ApiUser(ApiRequest):
         # TODO: Make sure *nothing* exists in the database with an ancestor of this user, just to be sure
 
         db_user = User( key_name = username, gaeUser = gaeUser, secret = base64.urlsafe_b64encode(os.urandom(16)) )
+        if username != 'GlowScriptDemos': db_user.pinned=["GlowScriptDemos/Examples"]
         db_user.put()
 
         db_my_programs = Folder( parent = db_user, key_name = "Public", isPublic=True )
