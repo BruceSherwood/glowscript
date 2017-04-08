@@ -106,13 +106,15 @@ $(function () {
     }
     function apiURL( route ) {
         if (route.login !== undefined)
-            return 'api/login'
+            return 'api/login';
+        if (route.abort !== undefined)
+            return 'api/abort';
         if (route.user !== undefined) {
-            var u = "api/user/" + encode(route.user)  // user might be LIST, to get the list
+            var u = "api/user/" + encode(route.user);  // user might be LIST, to get the list
             if (route.folder !== undefined) {
-                u += "/folder/" + encode(route.folder)  // folder might be LIST, to get the list
+                u += "/folder/" + encode(route.folder);  // folder might be LIST, to get the list
                 if (route.program !== undefined) {
-                    u += "/program/" + encode(route.program)  // program might be LIST, to get the list
+                    u += "/program/" + encode(route.program);  // program might be LIST, to get the list
                 }
             }
             return u;
@@ -314,6 +316,7 @@ $(function () {
 
             $dialog.dialog({
                 width: 300,
+                dialogClass: "no-close",
                 modal: true,
                 autoOpen: true,
                 buttons: {
@@ -333,7 +336,12 @@ $(function () {
                             }
                         })
                     },
-                    //"Cancel": function () { $(this).dialog("close"); }
+                    "Abort": function () {
+                        $(this).dialog("close");
+                        apiGet({abort:1}, function(stat) {
+                            window.location.assign(stat.logout_url);    // Go to logout url. Maybe its better to use redirect().
+                        })
+                    }
                 },
                 close: function () { }
             }).submit(function(ev){
