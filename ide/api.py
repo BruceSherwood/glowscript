@@ -51,6 +51,7 @@ class User (db.Model):
     joinDate = db.DateTimeProperty(auto_now_add=True)
     gaeUser = db.UserProperty()
     secret = db.StringProperty(indexed=False)
+    pinned = db.StringListProperty(indexed=False) #, default=["GlowScriptDemos/Examples"])
 
 class Folder (db.Model):
     """A collection of programs created by a user"""
@@ -176,6 +177,7 @@ class ApiUser(ApiRequest):
         # TODO: Make sure *nothing* exists in the database with an ancestor of this user, just to be sure
 
         db_user = User( key_name = username, gaeUser = gaeUser, secret = base64.urlsafe_b64encode(os.urandom(16)) )
+        if username != 'GlowScriptDemos': db_user.pinned=["GlowScriptDemos/Examples"]
         db_user.put()
 
         db_my_programs = Folder( parent = db_user, key_name = "Public", isPublic=True )
@@ -198,7 +200,9 @@ class ApiUserFolders(ApiRequest):
         	if k.isPublic != None and not k.isPublic and gaeUser != db_user.gaeUser: continue
         	folders.append(k.key().name())
         #folders = [ k.name() for k in Folder.all(keys_only=True).ancestor(db.Key.from_path("User",user)) ]
-        self.respond( {"user" : user, "folders" : folders} )
+        if gaeUser == db_user.gaeUser:
+            folders.extend(db_user.pinned)
+        self.respond( {"user": user, "folders": folders} );
 
 class ApiUserFolder(ApiRequest):
     def put(self, user, folder):                                                ##### create a new folder
@@ -234,6 +238,33 @@ class ApiUserFolder(ApiRequest):
             return self.error(409)
         db_folder.delete()
 
+class ApiUserFolderPin(ApiRequest):
+    def put(self, user, folder):
+        m = re.search(r'/user/([^/]+)/folder/([^/]+)/(unpin|pin)', self.request.path)
+        user = m.group(1)
+        folder = m.group(2)
+        toPin = True if m.group(3) == 'pin' else False
+        if not self.authorize(): return
+        if not self.validate(user, folder): return
+        gaeUser = users.get_current_user()
+        if not gaeUser:
+            return self.error(403)
+        db_user = User.gql("WHERE gaeUser = :gaeUser", gaeUser=gaeUser).get()
+        if not db_user:
+            return self.error(405)
+        db_folder = Folder.get(db.Key.from_path("User",user,"Folder",folder))
+        if not db_folder:
+            return self.error(404)
+        pinpath = user+r'/'+folder
+        if (toPin and (not pinpath in db_user.pinned)):
+            db_user.pinned.append(pinpath)
+            db_user.pinned.sort()
+            db_user.put()
+        elif ((not toPin) and (pinpath in db_user.pinned)):
+            db_user.pinned.remove(pinpath)
+            db_user.put()
+        #self.respond(db_user.pinned)
+        
 class ApiUserFolderPrograms(ApiRequest):
     def get(self, user, folder):                                                ##### display all programs in a public or owned folder
         m = re.search(r'/user/([^/]+)/folder/([^/]+)', self.request.path)
@@ -346,6 +377,9 @@ app = web.WSGIApplication(
         (r'/api/user/', ApiUsers),
 
         (r'/api/login', ApiLogin),
+
+        (r'/api/user/([^/]+)/folder/([^/]+)/pin', ApiUserFolderPin),        # AST - Pins non-owned folder for regular access!
+        (r'/api/user/([^/]+)/folder/([^/]+)/unpin', ApiUserFolderPin),      # AST - Unpins non-owned folder for regular access!
 
         (r'/api/admin/upgrade', ApiAdminUpgrade),
     ],
